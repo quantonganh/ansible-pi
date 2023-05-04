@@ -1,0 +1,7 @@
+---
+- name: Setup Pi
+  hosts: pi
+
+  roles:
+    - docker
+    - taskd
