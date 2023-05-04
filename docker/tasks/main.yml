@@ -1,0 +1,28 @@
+- name: Install docker
+  become: true
+  apt:
+    pkg:
+      - docker-ce
+      - docker-ce-rootless-extras
+      - docker-compose
+
+- name: Set up the daemon
+  shell: |
+    dockerd-rootless-setuptool.sh install
+  args:
+    creates: /run/user/1000/docker.sock
+
+- name: Enable and start Docker
+  systemd:
+    name: docker.service
+    enabled: true
+    state: started
+    scope: user
+    daemon_reload: true
+
+- name: Start blog services
+  community.docker.docker_compose:
+    project_src: /data
+    state: present
+  args:
+    docker_host: unix:///run/user/1000/docker.sock
