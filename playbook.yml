@@ -3,5 +3,6 @@
   hosts: pi
 
   roles:
+    - { role: ddns, tags: ddns }
     - docker
     - taskd

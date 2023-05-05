@@ -1,0 +1,5 @@
+- name: Creates an entry like "*/10 * * * * /data/namecheap-ddns.sh"
+  ansible.builtin.cron:
+    name: "update IP"
+    minute: "*/10"
+    job: "/data/namecheap-ddns.sh"
