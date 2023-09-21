@@ -1,3 +1,8 @@
+- name: Set up apt repo
+  script: install.sh > /tmp/install.log
+  args:
+    creates: /etc/apt/sources.list.d/docker.list
+
 - name: Install docker
   become: true
   apt:
@@ -5,6 +10,7 @@
       - docker-ce
       - docker-ce-rootless-extras
       - docker-compose
+      - uidmap
 
 - name: Set up the daemon
   shell: |
@@ -19,6 +25,14 @@
     state: started
     scope: user
     daemon_reload: true
+
+- name: Enable user lingering
+  shell: |
+    loginctl enable-linger $(whoami)
+
+- name: Docker login
+  shell: |
+    echo {{ cr_pat }} | docker login ghcr.io -u quantonganh --password-stdin
 
 - name: Start blog services
   community.docker.docker_compose:
