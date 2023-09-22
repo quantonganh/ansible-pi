@@ -3,6 +3,13 @@
   args:
     creates: /etc/apt/sources.list.d/docker.list
 
+- name: Install Prerequisites
+  become: true
+  apt:
+    pkg:
+      - uidmap
+      - fuse-overlayfs
+
 - name: Install docker
   become: true
   apt:
@@ -10,13 +17,45 @@
       - docker-ce
       - docker-ce-rootless-extras
       - docker-compose
-      - uidmap
 
 - name: Set up the daemon
   shell: |
     dockerd-rootless-setuptool.sh install
   args:
     creates: /run/user/1000/docker.sock
+
+# https://github.com/asm/ansi_scroller#running-everything-on-a-read-only-filesystem
+- name: mkdir ~/.config/docker
+  file:
+    path: /home/quantong/.config/docker
+    state: directory
+    mode: '0755'
+
+- name: Change storage driver to fuse-overlayfs
+  become: true
+  copy:
+    src: daemon.json
+    dest: /home/quantong/.config/docker/daemon.json
+
+- name: Remove /var/lib/docker/runtimes
+  file:
+    path: https://github.com/asm/ansi_scroller#running-everything-on-a-read-only-filesystem
+    state: absent
+
+- name: Mount up device by UUID
+  ansible.posix.mount:
+    path: /data
+    src: UUID=25a735b1-76bb-467f-beb1-f7be00a83d3d
+    fstype: ext4
+    state: present
+
+- name: Create a symbolic link
+  file:
+    src: /data/docker
+    dest: /home/quantong/.local/share/docker
+    owner: quantong
+    group: quantong
+    state: link
 
 - name: Enable and start Docker
   systemd:
